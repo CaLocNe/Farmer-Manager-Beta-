@@ -3,20 +3,24 @@ from discord import app_commands
 from datetime import datetime, timedelta
 import asyncio
 import os
+from zoneinfo import ZoneInfo  # For time zones (Python 3.9+)
 
 # Replace 'YOUR_BOT_TOKEN' with your actual Discord bot token
 TOKEN = os.getenv("TOKEN")
+
+# Define Vietnam time zone
+VIETNAM_TZ = ZoneInfo("Asia/Ho_Chi_Minh")
 
 # Create a bot instance with intents
 intents = discord.Intents.default()
 bot = discord.Client(intents=intents)
 tree = app_commands.CommandTree(bot)
 
-@tree.command(name="time", description="Get the current time")
+@tree.command(name="time", description="Get the current time in Vietnam")
 async def time_command(interaction: discord.Interaction):
-    # Get the current time in UTC
-    current_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
-    await interaction.response.send_message(f"The current time is: {current_time}")
+    # Get the current time in Vietnam (UTC+7)
+    current_time = datetime.now(VIETNAM_TZ).strftime("%Y-%m-%d %H:%M:%S ICT")  # ICT is Indochina Time
+    await interaction.response.send_message(f"The current time in Vietnam is: {current_time}")
 
 @tree.command(name="add", description="Add a farm process with completion notification")
 @app_commands.describe(name="Name of the process", resource="Resource type (food/wood/stone/gold)", time_str="Time in format like 2H30P (H for hours, P for minutes)")
@@ -39,13 +43,16 @@ async def add_command(interaction: discord.Interaction, name: str, resource: str
         await interaction.response.send_message("Invalid time format. Use like 2H30P for 2 hours 30 minutes.")
         return
     
-    # Calculate completion time
-    now = datetime.utcnow()
-    completion_time = now + timedelta(hours=hours, minutes=minutes)
-    delay = (completion_time - now).total_seconds()
+    # Calculate completion time in UTC for internal delay calculation
+    now_utc = datetime.now(ZoneInfo("UTC"))
+    completion_time_utc = now_utc + timedelta(hours=hours, minutes=minutes)
+    delay = (completion_time_utc - now_utc).total_seconds()
+    
+    # Display completion time in Vietnam time zone
+    completion_time_vietnam = completion_time_utc.astimezone(VIETNAM_TZ).strftime("%Y-%m-%d %H:%M:%S ICT")
     
     # Respond immediately
-    await interaction.response.send_message(f"Added farm process for {name} with {resource}, completion at {completion_time.strftime('%Y-%m-%d %H:%M:%S UTC')}")
+    await interaction.response.send_message(f"Added farm process for {name} with {resource}, completion at {completion_time_vietnam}")
     
     # Schedule the completion message
     asyncio.create_task(send_completion_message(interaction.channel, name, time_str, delay))
