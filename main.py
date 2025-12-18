@@ -4,7 +4,7 @@ import datetime
 import os
 
 # Replace 'YOUR_BOT_TOKEN' with your actual Discord bot token
-TOKEN = os.gevenv("TOKEN")
+TOKEN = os.getenv("TOKEN")
 
 # Create a bot instance with intents
 intents = discord.Intents.default()
