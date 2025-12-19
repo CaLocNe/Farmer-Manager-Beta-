@@ -3,6 +3,7 @@ from discord import app_commands
 from datetime import datetime, timedelta
 import asyncio
 import os
+import random
 from zoneinfo import ZoneInfo  # For time zones (Python 3.9+)
 
 # Replace 'YOUR_BOT_TOKEN' with your actual Discord bot token
@@ -15,6 +16,9 @@ VIETNAM_TZ = ZoneInfo("Asia/Ho_Chi_Minh")
 intents = discord.Intents.default()
 bot = discord.Client(intents=intents)
 tree = app_commands.CommandTree(bot)
+
+# Dictionary to store user balances for the game
+user_balances = {}
 
 @tree.command(name="time", description="Get the current time in Vietnam")
 async def time_command(interaction: discord.Interaction):
@@ -60,6 +64,66 @@ async def add_command(interaction: discord.Interaction, name: str, resource: str
 @tree.command(name="info", description="info bot")
 async def info_command(interaction: discord.Interaction):
     await interaction.response.send_message("Hi! tôi tên là Penguin, nhà phát triển của tôi là Hứa Thịnh. Hiện tại tôi đang ở phiên bản beta và vẫn đang trong giai đoạn phát triển cũng như vá một số lỗi cần thiết!")
+
+@tree.command(name="game", description="Register for the game")
+async def game_command(interaction: discord.Interaction):
+    user_id = interaction.user.id
+    user_balances[user_id] = 10  # Initial balance
+    await interaction.response.send_message('Successfully Registered. Current Balance: 10$')
+
+@tree.command(name="play", description="Start playing the game")
+async def play_command(interaction: discord.Interaction):
+    user_id = interaction.user.id
+    if user_id not in user_balances:
+        await interaction.response.send_message('Please register first with /game.')
+        return
+    await interaction.response.send_message('Choose the Result That You Predict: even/odd/number. Bet amount (use /bet command)')
+
+@tree.command(name="bet", description="Place a bet on the game")
+@app_commands.describe(choice="Choose the result you predict", bet_amount="Amount to bet", number="If choosing 'number', specify the number (1-10)")
+@app_commands.choices(choice=[
+    app_commands.Choice(name="even", value="even"),
+    app_commands.Choice(name="odd", value="odd"),
+    app_commands.Choice(name="number", value="number"),
+])
+async def bet_command(interaction: discord.Interaction, choice: str, bet_amount: int, number: int = None):
+    user_id = interaction.user.id
+    if user_id not in user_balances:
+        await interaction.response.send_message('Please register first with /game.')
+        return
+    
+    choice = choice.lower()
+    if choice not in ['even', 'odd', 'number']:
+        await interaction.response.send_message('Invalid choice. Choose even, odd, or number.')
+        return
+    
+    if bet_amount <= 0 or bet_amount > user_balances[user_id]:
+        await interaction.response.send_message('Invalid bet amount. Must be positive and not exceed your balance.')
+        return
+    
+    if choice == 'number':
+        if number is None or not (1 <= number <= 10):
+            await interaction.response.send_message('For number, specify a number between 1 and 10.')
+            return
+    
+    # Generate random number (1-10)
+    result = random.randint(1, 10)
+    
+    # Check if prediction is correct
+    correct = False
+    if choice == 'even' and result % 2 == 0:
+        correct = True
+    elif choice == 'odd' and result % 2 != 0:
+        correct = True
+    elif choice == 'number' and number == result:
+        correct = True
+    
+    if correct:
+        user_balances[user_id] += bet_amount
+        await interaction.response.send_message(f'Correct! The result was {result}. You won {bet_amount}$. Current Balance: {user_balances[user_id]}$')
+    else:
+        user_balances[user_id] -= bet_amount
+        await interaction.response.send_message(f'Wrong! The result was {result}. You lost {bet_amount}$. Current Balance: {user_balances[user_id]}$')
 
 async def send_completion_message(channel, name, time_str, delay):
     await asyncio.sleep(delay)
