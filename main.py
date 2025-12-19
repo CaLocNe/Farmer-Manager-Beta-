@@ -30,9 +30,6 @@ async def add_command(interaction: discord.Interaction, name: str, resource: str
     if resource.lower() not in valid_resources:
         await interaction.response.send_message("Invalid resource. Choose from food, wood, stone, gold.")
         return
-
-@tree.command(name="info", description="info bot")
-    await channel.send("Hi! tôi tên là Penguin, nhà phát triển của tôi là Hứa Thịnh. Hiện tại tôi đang ở phiên bản beta và vẫn đang trong giai đoạn phát triển cũng như vá một số lỗi cần thiết!")  ")
     
     # Parse time_str, assuming format "XHYP" where X is hours, Y is minutes (P for minutes)
     try:
@@ -59,6 +56,10 @@ async def add_command(interaction: discord.Interaction, name: str, resource: str
     
     # Schedule the completion message
     asyncio.create_task(send_completion_message(interaction.channel, name, time_str, delay))
+
+@tree.command(name="info", description="info bot")
+async def info_command(interaction: discord.Interaction):
+    await interaction.response.send_message("Hi! tôi tên là Penguin, nhà phát triển của tôi là Hứa Thịnh. Hiện tại tôi đang ở phiên bản beta và vẫn đang trong giai đoạn phát triển cũng như vá một số lỗi cần thiết!")
 
 async def send_completion_message(channel, name, time_str, delay):
     await asyncio.sleep(delay)
