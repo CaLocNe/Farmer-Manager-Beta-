@@ -84,7 +84,6 @@ async def play_command(interaction: discord.Interaction):
 @app_commands.choices(choice=[
     app_commands.Choice(name="even", value="even"),
     app_commands.Choice(name="odd", value="odd"),
-    app_commands.Choice(name="number", value="number"),
 ])
 async def bet_command(interaction: discord.Interaction, choice: str, bet_amount: int, number: int = None):
     user_id = interaction.user.id
@@ -93,7 +92,7 @@ async def bet_command(interaction: discord.Interaction, choice: str, bet_amount:
         return
     
     choice = choice.lower()
-    if choice not in ['even', 'odd', 'number']:
+    if choice not in ['even', 'odd' ]:
         await interaction.response.send_message('Invalid choice. Choose even, odd, or number.')
         return
     
@@ -101,10 +100,7 @@ async def bet_command(interaction: discord.Interaction, choice: str, bet_amount:
         await interaction.response.send_message('Invalid bet amount. Must be positive and not exceed your balance.')
         return
     
-    if choice == 'number':
-        if number is None or not (1 <= number <= 10):
-            await interaction.response.send_message('For number, specify a number between 1 and 10.')
-            return
+    
     
     # Generate random number (1-10)
     result = random.randint(1, 10)
@@ -115,8 +111,7 @@ async def bet_command(interaction: discord.Interaction, choice: str, bet_amount:
         correct = True
     elif choice == 'odd' and result % 2 != 0:
         correct = True
-    elif choice == 'number' and number == result:
-        correct = True
+    
     
     if correct:
         user_balances[user_id] += bet_amount
