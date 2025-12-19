@@ -30,6 +30,10 @@ async def add_command(interaction: discord.Interaction, name: str, resource: str
     if resource.lower() not in valid_resources:
         await interaction.response.send_message("Invalid resource. Choose from food, wood, stone, gold.")
         return
+
+@tree.command(name="info", description="info bot")
+          await asyncio.sleep(delay)
+    await channel.send("Hi! tôi tên là Penguin, nhà phát triển của tôi là Hứa Thịnh. Hiện tại tôi đang ở phiên bản beta và vẫn đang trong giai đoạn phát triển cũng như vá một số lỗi cần thiết!")  ")
     
     # Parse time_str, assuming format "XHYP" where X is hours, Y is minutes (P for minutes)
     try:
